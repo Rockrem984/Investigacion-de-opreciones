@@ -2,10 +2,8 @@
 Simplex con Método de Dos Fases (maneja <=, >=, =)
 Compatible con Python 3.13
 Requiere: numpy
-
 Uso:
     python simplex_2phase.py
-
 El programa pide:
  - tipo (max/min)
  - número de variables n
