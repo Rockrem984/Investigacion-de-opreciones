@@ -6,4 +6,5 @@ def pivot (table, row,col):
     for r in range(m):
         if r !=row:
             table[r, :]-=table[r, col]*table[row, :]
-            def
+
+def find_enter
