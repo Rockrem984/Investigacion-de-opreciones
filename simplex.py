@@ -110,3 +110,122 @@ def build_initial_table(n, m, A, b, relations, c, maximize=True):
         table[-1, :n] = c  
 
     return table, slack_ptr, art_ptr, basis
+
+def make_phase1_objective(table, art_cols):
+    m, n = table.shape
+    for col in art_cols:
+        table[-1, col] = -1.0
+    table[-1, -1] = 0.0
+    for col in art_cols:
+        rows_with_one = np.where(np.abs(table[:m-1, col] - 1.0) < EPS)[0]
+        if rows_with_one.size == 1:
+            i = int(rows_with_one[0])
+            table[-1, :] -= table[i, :]
+
+def remove_artificial_columns(table, art_cols):
+    keep_cols = [j for j in range(table.shape[1]-1) if j not in art_cols] + [-1]
+    new_table = table[:, keep_cols]
+    return new_table
+
+def run_two_phase(n, m, A, b, relations, c, maximize=True):
+    table, slack_cols, art_cols, basis = build_initial_table(n, m, A, b, relations, c, maximize=True)
+    art_cols = list(art_cols)
+    decision_range = list(range(n))
+    if art_cols:
+        make_phase1_objective(table, art_cols)
+        status, table = simplex_max(table)
+        phase1_value = table[-1, -1]
+        if phase1_value < -EPS:
+            return "infeasible", None, None
+        table = remove_artificial_columns(table, art_cols)
+    else:
+        pass
+    cols_now = table.shape[1] - 1
+    c_aligned = np.zeros(cols_now)
+    limit = min(n, cols_now)
+    c_arr = np.array(c, dtype=float)
+    if maximize:
+        c_aligned[:limit] = -c_arr[:limit]
+    else:
+        c_aligned[:limit] = c_arr[:limit] 
+        c_aligned[:limit] = -c_arr[:limit]
+    table[-1, :-1] = 0.0
+    table[-1, :c_aligned.size] = c_aligned[:c_aligned.size]
+    table[-1, -1] = 0.0
+    m_table = table.shape[0] - 1
+    n_table = table.shape[1] - 1
+    for i in range(m_table):
+        for j in range(n_table):
+            col = table[:m_table, j]
+            if np.abs(col[i] - 1.0) < EPS and np.count_nonzero(np.abs(col) > EPS) == 1:
+                coef = table[-1, j]
+                if abs(coef) > EPS:
+                    table[-1, :] -= coef * table[i, :]
+                break
+    status, table = simplex_max(table)
+    if status == "unbounded":
+        return "unbounded", None, None
+    solution, obj_value = extract_solution(table, n, None)
+    if not maximize:
+        obj_value = -obj_value
+
+    return "optimal", solution, obj_value
+
+def input_float(prompt):
+    while True:
+        try:
+            return float(input(prompt))
+        except:
+            print("Valor inválido. Intenta de nuevo.")
+
+def main():
+    print("Metodo Simplex")
+    tipo = input("¿Maximizar o Minimizar? (max/min): ").strip().lower()
+    maximize = True
+    if tipo == 'min':
+        maximize = False
+    elif tipo != 'max':
+        print("Opción no reconocida, asumiendo 'max'.")
+        maximize = True
+
+    n = int(input("Número de variables (n): "))
+    m = int(input("Número de restricciones (m): "))
+
+    print("\nIntroduce los coeficientes de la función objetivo (vector c):")
+    c = [input_float(f"c[{i+1}]: ") for i in range(n)]
+
+    A = []
+    b = []
+    relations = []
+    print("\nAhora ingresa cada restricción:")
+    for i in range(m):
+        print(f"\nRestricción {i+1}: (forma: a1 a2 ... an  [rel]  b )")
+        row = []
+        for j in range(n):
+            row.append(input_float(f"  Coeficiente a[{i+1},{j+1}]: "))
+        rel = input("  Relación (<=, >=, =): ").strip()
+        while rel not in ['<=', '>=', '=']:
+            print("  Relación inválida. Usa <= , >= o =")
+            rel = input("  Relación (<=, >=, =): ").strip()
+        rhs = input_float("  Lado derecho b: ")
+        A.append(row)
+        relations.append(rel)
+        b.append(rhs)
+
+    status, solution, value = run_two_phase(n, m, A, b, relations, c, maximize=maximize)
+
+    print("\n====== RESULTADO ======")
+    if status == "optimal":
+        print("Solución óptima (variables x1..xn):")
+        for i, val in enumerate(solution, 1):
+            print(f" x{i} = {val:.6f}")
+        print(f"Valor óptimo Z = {value:.6f}")
+    elif status == "infeasible":
+        print("El problema es INFACIL (no existe solución factible).")
+    elif status == "unbounded":
+        print("El problema es NO ACOtado (unbounded).")
+    else:
+        print("Estado desconocido:", status)
+
+if __name__ == "__main__":
+    main()    
