@@ -188,25 +188,25 @@ def main():
         print("Opción no reconocida, asumiendo 'max'.")
         maximize = True
 
-    n = int(input("Número de variables (n): "))
-    m = int(input("Número de restricciones (m): "))
+    n = int(input("Ingresa el numero de variables (n): "))
+    m = int(input("Ingresa el numero de restricciones (m): "))
 
-    print("\nIntroduce los coeficientes de la función objetivo (vector c):")
+    print(" Introduce los coeficientes de la funcion objetivo (vector c):")
     c = [input_float(f"c[{i+1}]: ") for i in range(n)]
 
     A = []
     b = []
     relations = []
-    print("\nAhora ingresa cada restricción:")
+    print("  Ahora ingresa cada restriccion:")
     for i in range(m):
-        print(f"\nRestricción {i+1}: (forma: a1 a2 ... an  [rel]  b )")
+        print(f"  Restricción {i+1}: (forma: a1 a2 ... an  [rel]  b )")
         row = []
         for j in range(n):
             row.append(input_float(f"  Coeficiente a[{i+1},{j+1}]: "))
         rel = input("  Relación (<=, >=, =): ").strip()
         while rel not in ['<=', '>=', '=']:
-            print("  Relación inválida. Usa <= , >= o =")
-            rel = input("  Relación (<=, >=, =): ").strip()
+            print("  Dato invalido. Usa <= , >= o =")
+            rel = input("  Relacion (<=, >=, =): ").strip()
         rhs = input_float("  Lado derecho b: ")
         A.append(row)
         relations.append(rel)
@@ -221,9 +221,9 @@ def main():
             print(f" x{i} = {val:.6f}")
         print(f"Valor óptimo Z = {value:.6f}")
     elif status == "infeasible":
-        print("El problema es INFACIL (no existe solución factible).")
+        print("No existe solucion factible")
     elif status == "unbounded":
-        print("El problema es NO ACOtado (unbounded).")
+        print("El problema es no acotado (unbounded).")
     else:
         print("Estado desconocido:", status)
 
