@@ -1,8 +1,5 @@
-
 import numpy as np
-
 EPS = 1e-9
-
 def pivot(table, row, col):
     table[row, :] = table[row, :] / table[row, col]
     m, n = table.shape
@@ -182,7 +179,7 @@ def input_float(prompt):
             print("Valor inválido. Intenta de nuevo.")
 
 def main():
-    print("Simplex - Método de Dos Fases (≤, ≥, =)")
+    print("Metodo Simplex")
     tipo = input("¿Maximizar o Minimizar? (max/min): ").strip().lower()
     maximize = True
     if tipo == 'min':
