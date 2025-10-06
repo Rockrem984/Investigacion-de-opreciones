@@ -75,7 +75,72 @@ def build_initial_table(n, m, A, b, relation, c, maximize=True):
         elif relations[i] == '=':
             art_count +=1
             
-total_cols = n + slack_count + art_count + 1
-table = np.zeros((m+1,total_cols))
-                    
+    total_cols = n + slack_count + art_count + 1
+    table = np.zeros((m+1,total_cols))
+   
+    table[:m, :n] = A
+    col_ptr = n
+    slack_ptr = []
+    art_ptr = []
+
+    for i in range(m):
+        rel = relations[i]
+        if rel == '<=':
+            table[i, col_ptr] = 1.0
+            slack_ptr.append(col_ptr)
+            basis[i] = col_ptr
+            col_ptr += 1
+        elif rel == '>=':
+             table[i, col_ptr] = -1.0
+            slack_ptr.append(col_ptr)
+            col_ptr += 1
+            table[i, col_ptr] = 1.0
+            art_ptr.append(col_ptr)
+            basis[i] = col_ptr
+            col_ptr += 1
+        elif rel == '=':
+            table[i, col_ptr] = 1.0
+            art_ptr.append(col_ptr)
+            basis[i] = col_ptr
+            col_ptr += 1
+        else:
+            raise ValueError("Relación inválida: usar '<=', '>=', o '='")
+
+    table[:m, -1] = b
+    if maximize:
+        table[-1, :n] = -c
+    else:
+        table[-1, :n] = c 
+
+    return table, slack_ptr, art_ptr, basis
+
+def make_phase1_objective(table, art_cols):
+    m, n = table.shape
+    for col in art_cols:
+        table[-1, col] = -1.0
+    table[-1, -1] = 0.0
+
+    for col in art_cols:
+        rows_with_one = np.where(np.abs(table[:m-1, col] - 1.0) < EPS)[0]
+        if rows_with_one.size == 1:
+            i = int(rows_with_one[0])
+            table[-1, :] -= table[i, :]
+
+def remove_artificial_columns(table, art_cols):
+     keep_cols = [j for j in range(table.shape[1]-1) if j not in art_cols] + [-1]
+    new_table = table[:, keep_cols]
+    return new_table
+
+def run_two_phase(n, m, A, b, relations, c, maximize=True):
+    table, slack_cols, art_cols, basis = build_initial_table(n, m, A, b, relations, c, maximize=True)
+    art_cols = list(art_cols)
+    decision_range = list(range(n))
+
+    if art_cols:
+        make_phase1_objective(table, art_cols)
+        status, table = simplex_max(table)
+        phase1_value = table[-1, -1]
+    if phase1_value < -EPS:    
+    
+               
 
