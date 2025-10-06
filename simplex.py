@@ -67,5 +67,15 @@ def build_initial_table(n, m, A, b, relation, c, maximize=True):
     art_count = 0
 
     for i in range(m):
-        if relation[i] == '<=' :
+        if relations[i] == '<=' :
+            slack_count += 1
+        elif relations[i] == '>=':
+            slack_count += 1
+            art_count += 1
+        elif relations[i] == '=':
+            art_count +=1
             
+total_cols = n + slack_count + art_count + 1
+table = np.zeros((m+1,total_cols))
+                    
+
