@@ -6,7 +6,7 @@ def pivot(table, row, col):
     for r in range(m):
         if r != row:
             table[r, :] -= table[r, col] * table[row, :]
-
+#_
 def find_entering_col(table):
     last = table.shape[0] - 1
     row = table[last, :-1]
